@@ -2,19 +2,23 @@ const Order = require('../models/order');
 const Product = require('../models/product');
 const { auth } = require('../middleware/auth');
 const express = require('express');
+const Cart = require('../models/cart');
 const router = new express.Router();
 
+//placing a order
 router.post('/order', auth, async (req, res) => {
 	await req.user.populate({
 		path : 'cart'
 	});
-	const cart = req.user.cart[0];
+	let cart = req.user.cart[0];
 	const order = new Order({
 		items     : [
 			...cart.items
 		],
 		accountId : req.user._id,
-		bill      : cart.bill
+		bill      : cart.bill,
+		count     : cart.count,
+		status    : 'confirmed'
 	});
 	try {
 		await order.save();
@@ -25,17 +29,58 @@ router.post('/order', auth, async (req, res) => {
 				throw new Error('Out of stock');
 			}
 			product.quantity -= cart.items[i].quantity;
+
+			await product.save();
 		}
+		//tried to empty cart(failed)
+		// req.user.cart = {
+		// 	shopper : user._id,
+		// 	items   : [
+		// 		{}
+		// 	]
+		// };
+
+		// cart = await Cart.findOne({ _id: req.user.cart.id });
+		// cart = {
+		// 	shopper : user._id,
+		// 	items   : [
+		// 		{}
+		// 	]
+		// };
+		// await cart.save();
+
 		res.send(order);
+	} catch (e) {
+		res.status(400).send({ error: e });
+	}
+});
+
+//listing orders
+router.get('/order/me', auth, async (req, res) => {
+	try {
+		const orders = await Order.find({ accountId: req.user._id });
+		res.status(200).send(orders);
 	} catch (e) {
 		res.status(400).send(e);
 	}
 });
 
-router.get('/order/me', auth, async (req, res) => {
+//canceling orders
+router.patch('/order/cancel/:id', auth, async (req, res) => {
+	const order = await Order.findById(req.params.id);
+
 	try {
-		const orders = await Order.find({ accountId: req.user._id });
-		res.status(200).send(orders);
+		order.status = 'canceled';
+		await order.save();
+
+		for (let i = 1; i < order.count; i++) {
+			const product = await Product.findOne({ _id: order.items[i].item });
+
+			product.quantity += order.items[i].quantity;
+
+			await product.save();
+		}
+		res.send(order).status(200);
 	} catch (e) {
 		res.status(400).send(e);
 	}

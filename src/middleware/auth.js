@@ -5,7 +5,7 @@ const User = require('../models/user');
 const auth = async function(req, res, next) {
 	try {
 		const token = req.header('Authorization').replace('Bearer ', '');
-		const decoded = jwt.verify(token, 'nightpanda');
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 		const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
 
 		if (!user) throw new Error();
@@ -20,7 +20,7 @@ const auth = async function(req, res, next) {
 //restricting basic users reach
 const roleAuth = function(req, res, next) {
 	try {
-		if (req.user.role === 'basic') {
+		if (req.user.role !== 'admin') {
 			throw new Error('Access Denied');
 		}
 		next();

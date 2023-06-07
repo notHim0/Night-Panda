@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const Cart = require('../models/cart');
 const express = require('express');
+const { sendWelcomeEmail, sendCancelationEmail } = require('../emails/account');
 const router = new express.Router();
 const { auth } = require('../middleware/auth');
 
@@ -16,6 +17,7 @@ router.post('/user', async (req, res) => {
 	try {
 		await cart.save();
 		await user.save();
+		sendWelcomeEmail(user.email, user.name);
 		const token = await user.generateAuthToken();
 		res.status(201).send({ user, cart, token });
 	} catch (e) {
@@ -87,6 +89,7 @@ router.patch('/user/update', auth, async (req, res) => {
 //deleting user
 router.delete('/user/delete', auth, async (req, res) => {
 	try {
+		sendCancelationEmail(req.user.email, req.user.name);
 		await req.user.deleteOne();
 		res.status(200).send(req.user);
 	} catch (e) {

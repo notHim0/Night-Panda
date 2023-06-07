@@ -6,7 +6,7 @@ const userRouter = require('./routers/userRouter');
 const productRouter = require('./routers/productRouter');
 const cartRouter = require('./routers/cartRouter');
 
-const port = process.env.PORT || 5500;
+const port = process.env.PORT;
 const app = express();
 
 app.use(express.json());

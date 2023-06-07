@@ -8,6 +8,12 @@ const orderSchema = new mongoose.Schema(
 		items     : [],
 		bill      : {
 			type : Number
+		},
+		status    : {
+			type : String
+		},
+		count     : {
+			type : Number
 		}
 	},
 	{
