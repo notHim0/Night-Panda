@@ -6,6 +6,7 @@ const router = new express.Router();
 
 router.post('/cart/add/:id', auth, async (req, res) => {
 	try {
+		//push items
 		const cart = await Cart.findOne({ shopper: req.user._id });
 		const product = await Product.findById(req.params.id);
 		cart.items = cart.items.concat({ item: req.params.id, quantity: req.query.quantity });

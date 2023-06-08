@@ -21,33 +21,27 @@ router.post('/order', auth, async (req, res) => {
 		status    : 'confirmed'
 	});
 	try {
-		await order.save();
 		for (let i = 1; i <= cart.count; i++) {
 			const product = await Product.findOne({ _id: cart.items[i].item });
 
-			if (product.quantity - cart.items[i].quantity < 0) {
-				throw new Error('Out of stock');
-			}
-			product.quantity -= cart.items[i].quantity;
-
-			await product.save();
+			// if (product.quantity - cart.items[i].quantity < 0) {
+			// 	throw Error('Out of stock');
+			// }
+			// product.quantity -= cart.items[i].quantity;
+			await order.save();
+			// await product.save();
 		}
 		//tried to empty cart(failed)
-		// req.user.cart = {
-		// 	shopper : user._id,
-		// 	items   : [
-		// 		{}
-		// 	]
-		// };
+		// console.log(req.user.cart.items);
 
-		// cart = await Cart.findOne({ _id: req.user.cart.id });
-		// cart = {
-		// 	shopper : user._id,
-		// 	items   : [
-		// 		{}
-		// 	]
-		// };
-		// await cart.save();
+		// req.user.cart[items] = [];
+		console.log(req.user.cart[0]._id);
+		cart = await Cart.findOne({ _id: req.user.cart[0]._id });
+		console.log(cart, 'fshdalfhjs');
+		cart.items = [
+			{}
+		];
+		await cart.save();
 
 		res.send(order);
 	} catch (e) {
